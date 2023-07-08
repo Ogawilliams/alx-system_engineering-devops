@@ -1,22 +1,30 @@
-#1 ssh into the server
+#!/usr/bin/env bash
+# script to report information about server domains
+# shellcheck disable=SC2086
+check_domain() {
+	# awk will use record seperator of space
+	# space sperated list of sub domains
+	SUBDOMAINS='www lb-01 web-01 web-02'
 
-#2 install snapd. Follow this guide https://snapcraft.io/docs/installing-snapd
-
-#3 Ensure that your version of snapd is up to date
-$ sudo snap install core; sudo snap refresh core
-
-#4 Remove certbot-auto and any Certbot OS packages
-$ sudo apt-get remove certbot
-
-#5 Install Certbot
-$ sudo snap install --classic certbot
-
-#6 Prepare the Certbot command
-$ sudo ln -s /snap/bin/certbot /usr/bin/certbot
-
-#7 Choose how you'd like to run Certbot
-$ sudo certbot certonly --standalone # if your server is not current running on the machine
-$ sudo certbot certonly --webroot # if it is running and do not want to stop it while certbot installs
-
-#8 Install your certificate
-$ sudo snap install --classic certbot
+	if [ -z "$1" ]; then
+		exit
+	fi
+	# no sub domain specified, do all
+	if [ -z "$2" ]; then
+		echo "$SUBDOMAINS" | awk -v domain="$1"\
+		'BEGIN { RS=" " }
+		{split($0,ARR," ");
+		cmd = "dig " ARR[1]"."domain " | grep -A1 \"ANSWER SECTION:\" | tail -n1";
+		system(cmd)
+		close(cmd)}' | awk\
+		'{
+		split($0, DOMS, ".");
+		print "The subdomain " DOMS[1] " is a " $4 " record and points to " $5}'
+	else
+		dig "$2.$1" | grep -A1 "ANSWER SECTION:" | tail -n1 | awk\
+		'{
+		split($0, DOMS, ".");
+		print "The subdomain " DOMS[1] " is a " $4 " record and points to " $5}'
+	fi
+}
+check_domain "$1" "$2"
