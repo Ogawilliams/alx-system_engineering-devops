@@ -1,4 +1,4 @@
-sh into the server
+#1 ssh into the server
 
 #2 install snapd. Follow this guide https://snapcraft.io/docs/installing-snapd
 

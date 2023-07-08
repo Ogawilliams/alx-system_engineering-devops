@@ -1,19 +1,22 @@
- bash script that will display information about subdomains
+#1 ssh into the server
 
-subs=("www" "lb-01" "web-01" "web-02")
+#2 install snapd. Follow this guide https://snapcraft.io/docs/installing-snapd
 
-function dns_info ()
-{
- 	read -r -a lines < <( dig "$1" | grep -A1 'ANSWER SECTION' | grep "$1" | awk '{print $4, $5}')
- 	echo "The subdomain ${2} is a ${lines[0]} record and points to ${lines[1]}"
-}
+#3 Ensure that your version of snapd is up to date
+$ sudo snap install core; sudo snap refresh core
 
-if [ -z "$2" ]
-then
-	for sub in "${subs[@]}"
-	do
-		dns_info "${sub}.${1}" "$sub"
-	done
-else
-	dns_info "${2}.${1}" "${2}"
-fi
+#4 Remove certbot-auto and any Certbot OS packages
+$ sudo apt-get remove certbot
+
+#5 Install Certbot
+$ sudo snap install --classic certbot
+
+#6 Prepare the Certbot command
+$ sudo ln -s /snap/bin/certbot /usr/bin/certbot
+
+#7 Choose how you'd like to run Certbot
+$ sudo certbot certonly --standalone # if your server is not current running on the machine
+$ sudo certbot certonly --webroot # if it is running and do not want to stop it while certbot installs
+
+#8 Install your certificate
+$ sudo snap install --classic certbot
